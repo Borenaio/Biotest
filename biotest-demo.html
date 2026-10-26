@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BioTest Diagnósticos – Sitio de pruebas</title>
+<style>
+  :root { --azul:#1f3a5f; --claro:#eef3f9; --ok:#1e7b3a; --error:#b3261e; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Arial, Helvetica, sans-serif; background:#f6f8fb; color:#222; }
+  header { background:var(--azul); color:#fff; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; }
+  header h1 { font-size:18px; margin:0; }
+  header small { opacity:.8; }
+  main { max-width:760px; margin:24px auto; padding:0 16px; }
+  .card { background:#fff; border:1px solid #d8dee8; border-radius:8px; padding:20px; margin-bottom:16px; }
+  h2 { color:var(--azul); font-size:18px; margin-top:0; }
+  label { display:block; font-size:14px; margin:10px 0 4px; }
+  input, select { width:100%; padding:8px; border:1px solid #b9c3d1; border-radius:4px; font-size:14px; }
+  button { background:var(--azul); color:#fff; border:0; border-radius:4px; padding:9px 16px; margin-top:14px; cursor:pointer; font-size:14px; }
+  button.sec { background:#5b6b80; }
+  nav button { margin-right:6px; }
+  .msg { margin-top:12px; padding:10px; border-radius:4px; font-size:14px; display:none; }
+  .msg.ok { display:block; background:#e6f4ea; color:var(--ok); }
+  .msg.error { display:block; background:#fdecea; color:var(--error); }
+  table { width:100%; border-collapse:collapse; margin-top:12px; font-size:14px; }
+  th, td { border:1px solid #d8dee8; padding:6px 8px; text-align:left; }
+  th { background:var(--claro); }
+  .oculto { display:none; }
+  .nota { font-size:12px; color:#666; }
+</style>
+</head>
+<body>
+<header>
+  <h1>BioTest Diagnósticos S.A.S.</h1>
+  <small>Sitio de pruebas – Calidad de Software UNAD</small>
+</header>
+<main>
+
+  <!-- LOGIN -->
+  <section id="vistaLogin" class="card">
+    <h2>Iniciar sesión</h2>
+    <label for="email">Correo electrónico</label>
+    <input id="email" name="email" type="text" autocomplete="off">
+    <label for="password">Contraseña</label>
+    <input id="password" name="password" type="password">
+    <button id="btnIngresar" type="button">Ingresar</button>
+    <div id="loginMsg" class="msg" role="alert"></div>
+    <p class="nota">Usuario de prueba: paciente01@biotest.test · Biotest#2026</p>
+  </section>
+
+  <!-- PANEL -->
+  <section id="vistaPanel" class="oculto">
+    <div class="card">
+      <h2 id="saludo"></h2>
+      <nav>
+        <button id="menuRegistro" type="button">Registro de paciente</button>
+        <button id="menuCitas" type="button">Programar cita</button>
+        <button id="menuResultados" type="button">Mis resultados</button>
+        <button id="btnSalir" class="sec" type="button">Cerrar sesión</button>
+      </nav>
+    </div>
+
+    <div id="modRegistro" class="card modulo oculto">
+      <h2>Registro de paciente</h2>
+      <label for="tipoDoc">Tipo de documento</label>
+      <select id="tipoDoc"><option value="CC">Cédula de ciudadanía</option><option value="TI">Tarjeta de identidad</option><option value="CE">Cédula de extranjería</option></select>
+      <label for="numDoc">Número de documento</label>
+      <input id="numDoc" type="text">
+      <label for="nombre">Nombre completo</label>
+      <input id="nombre" type="text">
+      <label for="correo">Correo</label>
+      <input id="correo" type="text">
+      <label for="sede">Sede</label>
+      <select id="sede"><option value="Norte">Norte</option><option value="Sur">Sur</option></select>
+      <button id="btnGuardarPaciente" type="button">Guardar paciente</button>
+      <div id="regMsg" class="msg" role="alert"></div>
+    </div>
+
+    <div id="modCitas" class="card modulo oculto">
+      <h2>Programar cita</h2>
+      <label for="examen">Examen</label>
+      <select id="examen"><option>Hemograma</option><option>Glucosa</option><option>Perfil lipídico</option></select>
+      <label for="sedeCita">Sede</label>
+      <select id="sedeCita"><option value="Norte">Norte</option><option value="Sur">Sur</option></select>
+      <label for="fecha">Fecha (AAAA-MM-DD)</label>
+      <input id="fecha" type="text" placeholder="2026-11-03">
+      <label for="hora">Hora</label>
+      <select id="hora"><option>07:00</option><option>08:00</option><option>09:00</option></select>
+      <button id="btnAgendar" type="button">Agendar cita</button>
+      <div id="citaMsg" class="msg" role="alert"></div>
+    </div>
+
+    <div id="modResultados" class="card modulo oculto">
+      <h2>Mis resultados</h2>
+      <label for="buscar">Buscar por examen</label>
+      <input id="buscar" type="text">
+      <button id="btnBuscar" type="button">Buscar</button>
+      <p id="busquedaEco"></p>
+      <table>
+        <thead><tr><th>Fecha</th><th>Examen</th><th>Resultado</th></tr></thead>
+        <tbody id="listaResultados"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+  // ----- Datos simulados -----
+  var USUARIO = { email: "paciente01@biotest.test", clave: "Biotest#2026", nombre: "Paciente Demo" };
+  var pacientes = [{ tipo: "CC", num: "1012345678", nombre: "María López", sede: "Norte" }];
+  var citasOcupadas = [{ fecha: "2026-11-03", hora: "08:00", sede: "Norte" }];
+  var resultados = [
+    { fecha: "2026-09-12", examen: "Glucosa", valor: "95 mg/dL" },
+    { fecha: "2026-08-02", examen: "Hemograma", valor: "Hemoglobina 14,2 g/dL" },
+    { fecha: "2026-06-20", examen: "Perfil lipídico", valor: "Colesterol total 180 mg/dL" }
+  ];
+  var intentosFallidos = 0, bloqueada = false, consecutivoCita = 1000;
+
+  function $(id) { return document.getElementById(id); }
+  function mostrarMsg(id, texto, tipo) { var m = $(id); m.textContent = texto; m.className = "msg " + tipo; }
+  function limpiarMsg(id) { var m = $(id); m.textContent = ""; m.className = "msg"; }
+
+  // ----- Login (CP-01, CP-02, CP-20) -----
+  $("btnIngresar").addEventListener("click", function () {
+    var email = $("email").value.trim(), clave = $("password").value;
+    if (bloqueada) { mostrarMsg("loginMsg", "Cuenta bloqueada por 15 minutos por intentos fallidos", "error"); return; }
+    if (email === USUARIO.email && clave === USUARIO.clave) {
+      intentosFallidos = 0; limpiarMsg("loginMsg");
+      $("vistaLogin").classList.add("oculto");
+      $("vistaPanel").classList.remove("oculto");
+      $("saludo").textContent = "Bienvenido, " + USUARIO.nombre;
+      return;
+    }
+    intentosFallidos++;
+    if (intentosFallidos >= 3) { bloqueada = true; mostrarMsg("loginMsg", "Cuenta bloqueada por 15 minutos por intentos fallidos", "error"); }
+    else { mostrarMsg("loginMsg", "Usuario o contraseña incorrectos", "error"); }
+  });
+
+  $("btnSalir").addEventListener("click", function () {
+    $("vistaPanel").classList.add("oculto"); $("vistaLogin").classList.remove("oculto");
+    $("email").value = ""; $("password").value = "";
+  });
+
+  function abrir(id) {
+    var mods = document.querySelectorAll(".modulo");
+    for (var i = 0; i < mods.length; i++) mods[i].classList.add("oculto");
+    $(id).classList.remove("oculto");
+  }
+  $("menuRegistro").addEventListener("click", function () { abrir("modRegistro"); });
+  $("menuCitas").addEventListener("click", function () { abrir("modCitas"); });
+  $("menuResultados").addEventListener("click", function () { abrir("modResultados"); pintarResultados(resultados); });
+
+  // ----- Registro y duplicados (CP-03, CP-04, CP-05) -----
+  $("btnGuardarPaciente").addEventListener("click", function () {
+    var tipo = $("tipoDoc").value, num = $("numDoc").value.trim(), nombre = $("nombre").value.trim(), sede = $("sede").value;
+    if (!num || !nombre) { mostrarMsg("regMsg", "Complete los campos obligatorios: número de documento y nombre", "error"); return; }
+    if (!/^\d{5,12}$/.test(num)) { mostrarMsg("regMsg", "El número de documento solo admite dígitos (5 a 12)", "error"); return; }
+    for (var i = 0; i < pacientes.length; i++) {
+      if (pacientes[i].tipo === tipo && pacientes[i].num === num) {
+        mostrarMsg("regMsg", "Paciente ya registrado (" + tipo + " " + num + ") en la sede " + pacientes[i].sede + ". No se creó un registro nuevo.", "error");
+        return;
+      }
+    }
+    pacientes.push({ tipo: tipo, num: num, nombre: nombre, sede: sede });
+    mostrarMsg("regMsg", "Paciente registrado correctamente", "ok");
+  });
+
+  // ----- Citas (CP-07, CP-08) -----
+  function hoyISO() { var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+  $("btnAgendar").addEventListener("click", function () {
+    var fecha = $("fecha").value.trim(), hora = $("hora").value, sede = $("sedeCita").value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) { mostrarMsg("citaMsg", "Ingrese la fecha en formato AAAA-MM-DD", "error"); return; }
+    if (fecha < hoyISO()) { mostrarMsg("citaMsg", "No se puede agendar una cita en una fecha pasada", "error"); return; }
+    for (var i = 0; i < citasOcupadas.length; i++) {
+      var c = citasOcupadas[i];
+      if (c.fecha === fecha && c.hora === hora && c.sede === sede) { mostrarMsg("citaMsg", "El horario seleccionado no está disponible", "error"); return; }
+    }
+    citasOcupadas.push({ fecha: fecha, hora: hora, sede: sede });
+    consecutivoCita++;
+    mostrarMsg("citaMsg", "Cita programada N° CT-" + consecutivoCita + " – Estado: Programada", "ok");
+  });
+
+  // ----- Resultados (CP-12, CP-24) -----
+  function pintarResultados(lista) {
+    var tb = $("listaResultados"); tb.innerHTML = "";
+    lista.forEach(function (r) {
+      var tr = document.createElement("tr");
+      [r.fecha, r.examen, r.valor].forEach(function (v) { var td = document.createElement("td"); td.textContent = v; tr.appendChild(td); });
+      tb.appendChild(tr);
+    });
+  }
+  $("btnBuscar").addEventListener("click", function () {
+    var q = $("buscar").value;
+    $("busquedaEco").textContent = "Resultados para: " + q; // textContent evita la ejecución de scripts (XSS)
+    var f = resultados.filter(function (r) { return r.examen.toLowerCase().indexOf(q.trim().toLowerCase()) !== -1; });
+    pintarResultados(f);
+  });
+</script>
+</body>
+</html>
